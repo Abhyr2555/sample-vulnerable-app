@@ -1,61 +1,55 @@
-# NOTE: contains intentional security test patterns for SAST/SCA/IaC scanning.
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_s3_bucket" "app_bucket" {
-  bucket = "sample-app-terraform-bucket-12345"
-  # Fix: Removed public-read ACL
-}
-
-resource "aws_iam_policy" "app_policy" {
-  name        = "app-full-access"
-  description = "Policy used by instances"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      # Fix: Restricted to s3:GetObject and s3:PutObject actions
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject"
-      ],
-      # Fix: Restricted to the app_bucket resource
-      "Resource": "${aws_s3_bucket.app_bucket.arn}/*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_security_group" "open_sg" {
-  name        = "open-sg"
-  description = "Security group with wide open access"
-
-  # Fix: Only allow inbound HTTP (80) and SSH (22) from trusted IPs
-  ingress {
-    from_port   = 80 
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/24", "192.168.1.0/24"] 
-  }
-
-  ingress {
-    from_port   = 22
-    to_port     = 22  
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/24"]
-  }
-}
+1: # NOTE: contains intentional security test patterns for SAST/SCA/IaC scanning.
+2: terraform {
+3:   required_providers {
+4:     aws = {
+5:       source  = "hashicorp/aws"
+6:       version = "~> 4.0"
+7:     }
+8:   }
+9: }
+10:
+11: provider "aws" {
+12:   region = "us-east-1" 
+13: }
+14:
+15: resource "aws_s3_bucket" "app_bucket" {
+16:   bucket = "sample-app-terraform-bucket-12345"
+17:   acl    = "public-read"                        # Issue 1: public-read ACL 
+18: }
+19:
+20: # Fixed IAM policy with least privilege
+21: resource "aws_iam_policy" "app_policy" {
+22:   name        = "app-read-only-s3" 
+23:   description = "Allow read-only access to the app S3 bucket"
+24:
+25:   policy = <<EOF
+26: {
+27:   "Version": "2012-10-17",
+28:   "Statement": [
+29:     {
+30:       "Effect": "Allow",
+31:       "Action": [
+32:         "s3:GetObject",  # Added minimal read-only S3 actions
+33:         "s3:ListBucket"
+34:       ],
+35:       "Resource": [
+36:         "arn:aws:s3:::sample-app-terraform-bucket-12345", # Specified bucket ARN
+37:         "arn:aws:s3:::sample-app-terraform-bucket-12345/*"
+38:       ]
+39:     }
+40:   ]
+41: }
+42: EOF
+43: }
+44:
+45: resource "aws_security_group" "open_sg" {
+46:   name        = "open-sg"
+47:   description = "Security group with wide open access"
+48:
+49:   ingress {
+50:     from_port   = 0
+51:     to_port     = 0  
+52:     protocol    = "-1"
+53:     cidr_blocks = ["0.0.0.0/0"]                 # Issue 4: all ports open
+54:   }
+55: }
