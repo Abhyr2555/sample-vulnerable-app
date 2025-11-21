@@ -1,5 +1,5 @@
-1: # NOTE: intentionally includes older dependencies for dependency-scanning tests.
-2: Flask==1.0.2       # older Flask release
-3: requests==2.18.4   # older requests with known issues  
-4: PyYAML>=5.4        # Update to non-vulnerable PyYAML version
-5: boto3==1.7.0       # older boto3 version
+# NOTE: intentionally includes older dependencies for dependency-scanning tests.
+Flask==1.0.2       # older Flask release
+requests==2.18.4   # older requests with known issues
+PyYAML>=5.1        # Update PyYAML to safe version 5.1+ to avoid arbitrary code execution
+boto3==1.7.0       # older boto3 version
