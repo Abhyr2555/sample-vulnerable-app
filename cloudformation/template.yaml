@@ -1,85 +1,90 @@
-# NOTE: contains intentional security test patterns for SAST/SCA/IaC scanning.
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Sample CloudFormation template for an application
-
-Resources:
-  AppBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: sample-app-bucket-12345
-      AccessControl: PublicRead                 # Issue 1: public read ACL
-      # Added cross-region replication configuration for improved data durability and availability
-      ReplicationConfiguration:
-        Role: !GetAtt ReplicationRole.Arn
-        Rules:
-          - Destination:
-              Bucket: !Sub 'arn:aws:s3:::${AWS::StackName}-replica'
-              Region: us-west-2  # Replication to a different region
-            Status: Enabled
-            Priority: 1
-            DeleteMarkerReplication:
-              Status: Enabled
-
-  # IAM role for S3 replication
-  ReplicationRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: s3.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: S3ReplicationPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetReplicationConfiguration
-                  - s3:ListBucket
-                Resource: !GetAtt AppBucket.Arn
-              - Effect: Allow
-                Action:
-                  - s3:GetObjectVersionForReplication
-                  - s3:GetObjectVersionAcl
-                  - s3:GetObjectVersionTagging
-                Resource: !Sub '${AppBucket.Arn}/*'
-              - Effect: Allow
-                Action:
-                  - s3:ReplicateObject
-                  - s3:ReplicateDelete
-                  - s3:ReplicateTags
-                Resource: !Sub 'arn:aws:s3:::${AWS::StackName}-replica/*'
-
-  AppRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: AppRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ec2.amazonaws.com]
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: AppFullPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: '*'                       # Issue 2: wildcard action
-                Resource: '*'                     # Issue 3: wildcard resource
-
-  OpenSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: open-security-group
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0                     # Issue 4: SSH open to the world
+1: # NOTE: contains intentional security test patterns for SAST/SCA/IaC scanning.
+2: AWSTemplateFormatVersion: '2010-09-09'
+3: Description: Sample CloudFormation template for an application
+4: 
+5: Resources:
+6:   AppBucket:
+7:     Type: AWS::S3::Bucket
+8:     Properties:
+9:       BucketName: sample-app-bucket-12345
+10:       # Fixed: Removed public read ACL
+11:       # Added cross-region replication configuration for improved data durability and availability
+12:       ReplicationConfiguration:
+13:         Role: !GetAtt ReplicationRole.Arn
+14:         Rules:
+15:           - Destination:
+16:               Bucket: !Sub 'arn:aws:s3:::${AWS::StackName}-replica'
+17:               Region: us-west-2  # Replication to a different region
+18:             Status: Enabled
+19:             Priority: 1
+20:             DeleteMarkerReplication:
+21:               Status: Enabled
+22: 
+23:   # IAM role for S3 replication
+24:   ReplicationRole:
+25:     Type: AWS::IAM::Role
+26:     Properties:
+27:       AssumeRolePolicyDocument:
+28:         Version: '2012-10-17'
+29:         Statement:
+30:           - Effect: Allow
+31:             Principal:
+32:               Service: s3.amazonaws.com
+33:             Action: sts:AssumeRole
+34:       Policies:
+35:         - PolicyName: S3ReplicationPolicy
+36:           PolicyDocument:
+37:             Version: '2012-10-17'
+38:             Statement:
+39:               - Effect: Allow
+40:                 Action:
+41:                   - s3:GetReplicationConfiguration
+42:                   - s3:ListBucket
+43:                 Resource: !GetAtt AppBucket.Arn
+44:               - Effect: Allow
+45:                 Action:
+46:                   - s3:GetObjectVersionForReplication
+47:                   - s3:GetObjectVersionAcl
+48:                   - s3:GetObjectVersionTagging
+49:                 Resource: !Sub '${AppBucket.Arn}/*'
+50:               - Effect: Allow
+51:                 Action:
+52:                   - s3:ReplicateObject
+53:                   - s3:ReplicateDelete
+54:                   - s3:ReplicateTags
+55:                 Resource: !Sub 'arn:aws:s3:::${AWS::StackName}-replica/*'
+56: 
+57:   AppRole:
+58:     Type: AWS::IAM::Role
+59:     Properties:
+60:       RoleName: AppRole
+61:       AssumeRolePolicyDocument:
+62:         Version: '2012-10-17'
+63:         Statement:
+64:           - Effect: Allow
+65:             Principal:
+66:               Service: [ec2.amazonaws.com]
+67:             Action: sts:AssumeRole
+68:       Policies:
+69:         - PolicyName: AppFullPolicy
+70:           PolicyDocument:
+71:             Version: '2012-10-17'
+72:             Statement:
+73:               # Fixed: Removed wildcard action and resource
+74:               - Effect: Allow
+75:                 Action:
+76:                   - s3:GetObject
+77:                   - s3:PutObject
+78:                   - s3:DeleteObject
+79:                 Resource: !GetAtt AppBucket.Arn
+80: 
+81:   OpenSecurityGroup:
+82:     Type: AWS::EC2::SecurityGroup
+83:     Properties:
+84:       GroupDescription: open-security-group
+85:       # Fixed: Restricted SSH access to trusted IP range
+86:       SecurityGroupIngress:
+87:         - IpProtocol: tcp
+88:           FromPort: 22
+89:           ToPort: 22
+90:           CidrIp: 10.0.0.0/24
