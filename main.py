@@ -2,12 +2,11 @@
 import sqlite3
 import subprocess
 import json
-import os
 
 # hardcoded API token (Issue 1)
 API_TOKEN = "AKIAEXAMPLERAWTOKEN12345"
 
-# simple SQLite DB on local disk (Issue 2: insecure storage + lack of access control)
+# simple SQLite DB on local disk (Issue 2: insecure storage + lack of access control)  
 DB_PATH = "/tmp/app_users.db"
 conn = sqlite3.connect(DB_PATH)
 cur = conn.cursor()
@@ -31,12 +30,19 @@ def run_shell(command):
     return subprocess.getoutput(command)
 
 def deserialize_blob(blob):
-    # Safely deserialize JSON data instead of pickle
+    """
+    Safely deserialize JSON data from untrusted input. 
+    Raises ValueError if input is not valid JSON.
+    """
     try:
-        return json.loads(blob)
-    except json.JSONDecodeError:
-        print("Error: Invalid JSON data")
-        return None
+        # Use json.loads() which is safer than pickle for untrusted data
+        data = json.loads(blob) 
+    except ValueError as e:
+        raise ValueError(f"Invalid JSON input: {e}")
+    
+    # Additional validation, sanitization steps as needed
+    
+    return data
 
 if __name__ == "__main__":
     # seed some data
