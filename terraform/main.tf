@@ -21,8 +21,8 @@ resource "aws_iam_policy" "app_policy" {
   name        = "app-full-access"
   description = "Policy used by instances"
 
-  # FIX: Replaced wildcard "*:*" permissions with least-privilege access
-  # This policy now grants specific permissions instead of full administrative privileges
+  # FIX: Replaced wildcard "*" action with specific, least-privilege permissions
+  # This policy now grants only necessary S3 permissions instead of unrestricted access
   # Adjust the actions and resources below based on actual application requirements
   policy = <<EOF
 {
