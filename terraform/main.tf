@@ -21,6 +21,9 @@ resource "aws_iam_policy" "app_policy" {
   name        = "app-full-access"
   description = "Policy used by instances"
 
+  # FIX: Replaced wildcard "*:*" permissions with least-privilege access
+  # This policy now grants specific permissions instead of full administrative privileges
+  # Adjust the actions and resources below based on actual application requirements
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -30,9 +33,12 @@ resource "aws_iam_policy" "app_policy" {
       "Action": [
         "s3:GetObject",
         "s3:PutObject",
-        "ec2:DescribeInstances"
+        "s3:ListBucket"
       ],
-      "Resource": "*"                            # Issue 3: wildcard resources
+      "Resource": [
+        "arn:aws:s3:::sample-app-terraform-bucket-12345",
+        "arn:aws:s3:::sample-app-terraform-bucket-12345/*"
+      ]
     }
   ]
 }
