@@ -30,6 +30,18 @@ COPY . /app
 # AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
 RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2020-35492 (cairo, libcairo2) — stack buffer overflow in image-compositor.c
+# A flaw in cairo's image-compositor.c in all versions prior to 1.17.4 allows an attacker who
+# can provide a crafted input file to cause a stack buffer overflow -> out-of-bounds WRITE.
+# The highest impact from this vulnerability is to system availability.
+# Remediation: Upgrade libcairo2 to >= 1.17.4 (the patched release).
+# See: https://nvd.nist.gov/vuln/detail/CVE-2020-35492
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/26d41aeefa9350c6788a2b5c2380af71
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libcairo2 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
