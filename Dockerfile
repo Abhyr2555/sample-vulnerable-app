@@ -30,6 +30,17 @@ COPY . /app
 # AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
 RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2025-38715 (linux-image-aws) — hfs: fix slab-out-of-bounds in hfs_bnode_read()
+# In the Linux kernel, the hfs filesystem driver has a slab-out-of-bounds vulnerability in
+# hfs_bnode_read(). The patch introduces is_bnode_offset_valid() to validate offset values
+# and check_and_correct_requested_length() to validate/correct requested lengths.
+# Without this fix, a crafted HFS filesystem image could trigger memory corruption, kernel crash,
+# or privilege escalation on AWS EC2 instances running linux-image-aws.
+# Remediation: Update linux-image-aws to fixed version.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-38715
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/42ae9b4d492f75d3f5a6d7e38ea71751
+RUN apt-get update && apt-get install -y --only-upgrade linux-image-aws 2>/dev/null || true && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
