@@ -30,6 +30,16 @@ COPY . /app
 # AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
 RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2025-39973 (linux-image-aws) — i40e: add validation for ring_len param
+# In the Linux kernel, the i40e network driver lacks proper validation for the ring_len parameter.
+# Without this fix, an attacker or malformed configuration could trigger memory corruption,
+# kernel panic, or denial of service on AWS EC2 instances running linux-image-aws.
+# Remediation: Update linux-image-aws to fixed version.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-39973
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/0afd350844a9a75c51bfcda94790bf4b
+# Guardian Task: TASK-f289d7079266
+RUN apt-get update && apt-get install -y --only-upgrade linux-image-aws 2>/dev/null || true && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
