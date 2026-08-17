@@ -8,10 +8,13 @@ ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
 WORKDIR /app
 COPY . /app
 
+# SECURITY-FIX: CVE-2025-38211 (linux-image-aws) — use-after-free of work objects after cm_id destruction.
+# The RDMA/iwcm subsystem had a use-after-free bug in work object handling after cm_id destruction
+# (commit 59c68ac31e15). Ensure the linux-image-aws OS package is updated to its fixed version.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-38211
+# Remediation: Update linux-image-aws to patched version (AWS Inspector finding — High severity).
+#
 # SECURITY-FIX: CVE-2025-39994 (linux-image-aws) — use-after-free in xc5000_release.
-# The original code uses cancel_delayed_work() which does not guarantee the delayed
-# work item has fully completed. Ensure all OS packages including linux-image-aws
-# are updated to their latest patched versions.
 # See: https://nvd.nist.gov/vuln/detail/CVE-2025-39994
 # Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
 RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
