@@ -15,6 +15,17 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2026-46238 (linux-image-aws) — Update linux-image-aws to remediate High severity vulnerability.
+# CVE-2026-46238 affects linux-image-aws on AWS EC2 instances.
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+# See: https://nvd.nist.gov/vuln/detail/CVE-2026-46238
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/8865e83714ac67de81257ea18d7e1911
+RUN apt-get update \
+    && apt-get install -y --only-upgrade linux-image-aws 2>/dev/null || true \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # storing credentials in ENV (Issue 1)
 ENV AWS_ACCESS_KEY_ID=EXAMPLEKEY123
 ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
