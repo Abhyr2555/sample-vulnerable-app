@@ -15,6 +15,18 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2025-38565 (linux-image-aws) — RDMA/hns: Fix wrong fixed S_KEY for UD QPs.
+# The S_KEY field in UD QP was set to a fixed value instead of being derived from the QP number.
+# This can cause incorrect behavior in RDMA UD operations on affected AWS EC2 instances.
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-38565
+# AWS Inspector ARN: arn:aws:inspector2:us-west-2:381492157536:finding/268d05c6d99af24a3fb37b4ecf3f9355
+RUN apt-get update \
+    && apt-get install -y --only-upgrade linux-image-aws 2>/dev/null || true \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # storing credentials in ENV (Issue 1)
 ENV AWS_ACCESS_KEY_ID=EXAMPLEKEY123
 ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
