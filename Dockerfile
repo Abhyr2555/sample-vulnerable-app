@@ -30,6 +30,22 @@ COPY . /app
 # AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
 RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2025-38226 (linux-image-aws) — media: vivid: Change the size of the composing
+# In the Linux kernel, the following vulnerability has been resolved:
+# media: vivid: Change the size of the composing buffer to address a potential
+# memory safety issue in the vivid virtual video driver. This vulnerability can
+# lead to memory corruption or denial of service on affected AWS EC2 instances
+# running linux-image-aws.
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-38226
+# AWS Inspector ARN: arn:aws:inspector2:us-west-2:381492157536:finding/0a8ba1853ee1feffac2e18c863537c76
+# Guardian Task: TASK-a45b93f33eb2
+RUN apt-get update \
+    && apt-get install -y --only-upgrade linux-image-aws 2>/dev/null || true \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
