@@ -1,4 +1,5 @@
 # NOTE: contains patterns commonly flagged by scanners (for testing).
+# SECURITY-TODO: CVE-2023-52935 — linux-image-aws: Update linux-image-aws package to fixed version on the host EC2 instance. CVE-2023-52935 affects the linux-image-aws kernel package. Remediation: Run `apt-get update && apt-get install --only-upgrade linux-image-aws` on the underlying EC2 instance. Container-level fix is not possible for kernel packages; host OS patching is required.
 FROM python:3.9-slim
 
 # storing credentials in ENV (Issue 1)
