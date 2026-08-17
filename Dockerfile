@@ -1,6 +1,13 @@
 # NOTE: contains patterns commonly flagged by scanners (for testing).
 FROM python:3.9-slim
 
+# SECURITY-FIX: CVE-2025-40317 (linux-image-aws) — regmap: slimbus: fix bus_context pointer in regmap init calls.
+# Commit 4e65bda8273c revealed a kernel paging fault in the slimbus regmap driver.
+# Ensure all OS packages including linux-image-aws are updated to their latest patched versions.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-40317
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # storing credentials in ENV (Issue 1)
 ENV AWS_ACCESS_KEY_ID=EXAMPLEKEY123
 ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
