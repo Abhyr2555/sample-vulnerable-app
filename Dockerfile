@@ -8,6 +8,18 @@ ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
 WORKDIR /app
 COPY . /app
 
+# SECURITY-FIX: CVE-2025-37752 (linux-image-aws, linux-libc-dev) — net_sched: sch_sfq limit validation vulnerability
+# In the Linux kernel, the net_sched sch_sfq module has insufficient limit validation on
+# user-provided data. The limit can be updated based on other parameters, bypassing the
+# direct validation. Ensure all OS packages including linux-image-aws and linux-libc-dev
+# are updated to their latest patched versions at image build time.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-37752
+# Remediation: Update linux-image-aws and linux-libc-dev to fixed version (AWS Inspector finding).
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
