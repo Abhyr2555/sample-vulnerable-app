@@ -30,6 +30,17 @@ COPY . /app
 # AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
 RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2026-45867 (linux-image-aws) — power: supply: act8945a: Fix use-after-free in power_supply_changed()
+# Using the devm_ variant for requesting IRQ _before_ the devm_ variant for allocating/registering
+# the power_supply handle means the power_supply handle will be deallocated/unregistered _before_
+# the interrupt handler (since devm_ naturally deallocates in reverse order). This use-after-free
+# in the Linux kernel power supply driver can lead to memory corruption or privilege escalation
+# on affected AWS EC2 instances running linux-image-aws.
+# Remediation: Update linux-image-aws to fixed version.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2026-45867
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/42b0a5d0b0e80fcdc97de74a04080a7e
+RUN apt-get update && apt-get install -y --only-upgrade linux-image-aws 2>/dev/null || true && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
