@@ -30,6 +30,15 @@ COPY . /app
 # AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
 RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2025-71162 (linux-image-aws) — dmaengine: tegra-adma: Fix use-after-free
+# In the Linux kernel, the following vulnerability has been resolved:
+# dmaengine: tegra-adma: Fix use-after-free
+# Ensure all OS packages including linux-image-aws are updated to their latest patched versions.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-71162
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+# Finding ARN: arn:aws:inspector2:us-west-2:381492157536:finding/0b02bd291190885c4df4f34cda79d8e3
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
