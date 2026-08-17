@@ -8,6 +8,19 @@ ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
 WORKDIR /app
 COPY . /app
 
+# SECURITY-FIX: CVE-2026-31533 (linux-image-aws, linux-libc-dev) — net/tls use-after-free in tls_do_encryption()
+# In the Linux kernel, a use-after-free vulnerability exists in the -EBUSY error path of
+# tls_do_encryption() in net/tls. When encryption fails with EBUSY, a reference to an
+# already-freed socket buffer may be accessed, leading to memory corruption or privilege
+# escalation in TLS-offloaded network stacks.
+# Remediation: Update linux-image-aws and linux-libc-dev to fixed versions (AWS Inspector finding).
+# See: https://nvd.nist.gov/vuln/detail/CVE-2026-31533
+# AWS Inspector ARN: arn:aws:inspector2:us-west-2:381492157536:finding/0e758bb45e347fdb675492ff4d2d32ea
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
