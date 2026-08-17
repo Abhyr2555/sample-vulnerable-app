@@ -9,6 +9,14 @@ FROM python:3.9-slim
 # See: https://nvd.nist.gov/vuln/detail/CVE-2026-43233
 # Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
 # AWS Inspector ARN: arn:aws:inspector2:us-west-2:381492157536:finding/c97b5bfbdf17dc728902cd8c286b0ad9
+#
+# SECURITY-FIX: CVE-2025-38146 (linux-image-aws) — High severity
+# net: openvswitch: Fix the dead loop of MPLS parse
+# The unexpected MPLS packet may not end with the bottom label stack. When there is no bottom
+# label stack bit set, the MPLS parse loop runs indefinitely causing a kernel dead loop / DoS.
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+# AWS Inspector ARN: arn:aws:inspector2:us-west-2:381492157536:finding/433c304f55dd7c33ba2875e78a44993d
+# Task: TASK-eccbe49f7d19
 RUN apt-get update \
     && apt-get install -y --only-upgrade linux-image-aws 2>/dev/null || true \
     && apt-get upgrade -y \
