@@ -30,6 +30,15 @@ COPY . /app
 # AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
 RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2025-27835 (ghostscript, libgs9) — buffer overflow in psi/zbfont.c when converting glyphs to Unicode.
+# An issue was discovered in Artifex Ghostscript before 10.05.0. A buffer overflow occurs when
+# converting glyphs to Unicode in psi/zbfont.c, which can lead to memory corruption or
+# arbitrary code execution in applications processing PostScript or PDF files.
+# Remediation: Update ghostscript and libgs9 to version >= 10.05.0.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-27835
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/cc07234e61dd615fd225ccafbe3fcaf6
+RUN apt-get update && apt-get install -y --only-upgrade ghostscript libgs9 && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
