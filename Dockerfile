@@ -8,6 +8,13 @@ ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
 WORKDIR /app
 COPY . /app
 
+# SECURITY-FIX: CVE-2025-6021 (libxml2) — use-after-free via crafted XML document.
+# A flaw was found in libxml2 allowing use-after-free via a crafted XML document
+# validated against an XML schema with certain PSVI (Post-Schema-Validation Infoset)
+# augmentation. See: https://nvd.nist.gov/vuln/detail/CVE-2025-6021
+# Remediation: Update libxml2 to fixed version (AWS Inspector finding).
+RUN apt-get update && apt-get install -y --only-upgrade libxml2 && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
