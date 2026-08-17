@@ -15,6 +15,14 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2025-39749 (linux-image-aws) — double-free of context in HWS error flow
+# net/mlx5: HWS, fix double-free of context in error flow during the creation of HWS context.
+# Ensure all OS packages including linux-image-aws are updated to their latest patched versions.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2025-39749
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+# AWS Inspector ARN: arn:aws:inspector2:us-west-2:381492157536:finding/036c38d95939220754c485528529ee5b
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # storing credentials in ENV (Issue 1)
 ENV AWS_ACCESS_KEY_ID=EXAMPLEKEY123
 ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
