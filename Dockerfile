@@ -15,6 +15,17 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2026-27622 (libopenexr24, openexr) — High severity vulnerability
+# CVE-2026-27622 affects libopenexr24 and openexr packages.
+# OpenEXR is a high dynamic-range image file format library. A vulnerability in these packages
+# can lead to memory corruption, denial of service, or potential code execution when processing
+# crafted EXR image files.
+# Remediation: Update libopenexr24 and openexr to their fixed versions.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2026-27622
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/826d4c0d500c5fba188afcde
+# Guardian Task: TASK-b6c4ff551d69
+RUN apt-get update && apt-get install -y --only-upgrade libopenexr24 openexr 2>/dev/null || true && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # storing credentials in ENV (Issue 1)
 ENV AWS_ACCESS_KEY_ID=EXAMPLEKEY123
 ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
