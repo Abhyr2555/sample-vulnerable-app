@@ -15,15 +15,17 @@ cur.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username 
 conn.commit()
 
 def add_user(username, password):
-    # SQL injection vulnerability via string formatting (Issue 3)
-    sql = "INSERT INTO users (username, password) VALUES ('%s', '%s')" % (username, password)
-    cur.execute(sql)
+    # Fix CWE-89 (TASK-a524263c6017 / TASK-15a4ac4b83c2): Use parameterized query
+    # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/1b2346745594bdfa23b08eb5b80f7a20
+    sql = "INSERT INTO users (username, password) VALUES (?, ?)"
+    cur.execute(sql, (username, password))
     conn.commit()
 
 def get_user(username):
-    # SQL injection vulnerability again (Issue 3)
-    q = "SELECT id, username FROM users WHERE username = '%s'" % username
-    cur.execute(q)
+    # Fix CWE-89 (TASK-0e4b3ca3215f / TASK-e7e7084796fe): Use parameterized query
+    # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/4b3cb5a83ceea7d0f44887742a938277
+    q = "SELECT id, username FROM users WHERE username = ?"
+    cur.execute(q, (username,))
     return cur.fetchall()
 
 def run_shell(command):
@@ -39,9 +41,10 @@ if __name__ == "__main__":
     add_user("alice", "alicepass")
     add_user("bob", "bobpass")
 
-    # Demonstrate risky calls
-    print("API_TOKEN in use:", API_TOKEN)
-    print(get_user("alice' OR '1'='1"))  # demonstrates SQLi payload
+    # Fix CWE-200 (TASK-ea2e5c7bd46b): Mask sensitive value in print statement
+    # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/d3b9b8e426858943f1a4f9dd0c39707a
+    print("API_TOKEN in use:", "***REDACTED***")
+    print(get_user("alice"))
     print(run_shell("echo Hello && whoami"))
     try:
         # attempting to deserialize an arbitrary blob (will likely raise)
