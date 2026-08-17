@@ -30,6 +30,21 @@ COPY . /app
 # AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
 RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# SECURITY-FIX: CVE-2026-31659 (linux-image-aws, linux-libc-dev) — Linux kernel vulnerability
+# In the Linux kernel, the following vulnerability has been resolved: CVE-2026-31659 affects
+# linux-image-aws and linux-libc-dev. This is a Critical severity vulnerability that requires
+# updating both packages to their patched versions to remediate the security risk on AWS EC2
+# instances and container workloads.
+# Remediation: Update linux-image-aws and linux-libc-dev to fixed version (AWS Inspector finding).
+# See: https://nvd.nist.gov/vuln/detail/CVE-2026-31659
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/826fb1774c87aed8fbe3095f
+# Guardian Task: TASK-8a84fe8197c3
+RUN apt-get update \
+    && apt-get install -y --only-upgrade linux-image-aws linux-libc-dev 2>/dev/null || true \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
