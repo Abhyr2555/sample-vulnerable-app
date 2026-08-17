@@ -7,52 +7,33 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: sample-app-bucket-12345
-      AccessControl: PublicRead                 # Issue 1: public read ACL
-      # Added cross-region replication configuration for improved data durability and availability
-      ReplicationConfiguration:
-        Role: !GetAtt ReplicationRole.Arn
+      # Fix CWE-284 (TASK-123f20d007ad): Changed from PublicRead to Private
+      # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/8e9f5c6e906b20f90725f57ca9d22232
+      AccessControl: Private
+      # Fix TASK-f39b2ab17306: Add OwnershipControls when AccessControl is set
+      # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/0bb190c4f4d0f2171e0309bd42f8f179
+      OwnershipControls:
         Rules:
-          - Destination:
-              Bucket: !Sub 'arn:aws:s3:::${AWS::StackName}-replica'
-              Region: us-west-2  # Replication to a different region
-            Status: Enabled
-            Priority: 1
-            DeleteMarkerReplication:
-              Status: Enabled
-
-  # IAM role for S3 replication
-  ReplicationRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: s3.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: S3ReplicationPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetReplicationConfiguration
-                  - s3:ListBucket
-                Resource: !GetAtt AppBucket.Arn
-              - Effect: Allow
-                Action:
-                  - s3:GetObjectVersionForReplication
-                  - s3:GetObjectVersionAcl
-                  - s3:GetObjectVersionTagging
-                Resource: !Sub '${AppBucket.Arn}/*'
-              - Effect: Allow
-                Action:
-                  - s3:ReplicateObject
-                  - s3:ReplicateDelete
-                  - s3:ReplicateTags
-                Resource: !Sub 'arn:aws:s3:::${AWS::StackName}-replica/*'
+          - ObjectOwnership: BucketOwnerEnforced
+      # Fix TASK-3cbebc85229c: Enable versioning
+      # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/6208a09680770d6bb1093a86787a9def
+      VersioningConfiguration:
+        Status: Enabled
+      # Fix TASK-981722daf99f: Enable Object Lock
+      # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/49dc72fcf5d3b805da00daaec1d3e5cd
+      ObjectLockEnabled: true
+      # Fix TASK-9ffa0440a1ab: Add KMS encryption
+      # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/c9cabfa0d4a4808f7f484098b771c76d
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+      # Fix TASK-3eca57ca6c27 / TASK-59a3a68a2686: Removed circular ReplicationConfiguration
+      # (AppBucket->ReplicationRole->AppBucket circular dependency removed)
+      # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/04f57621f826405856e28b2e591aeaae
+      # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/1aeb6819990e3999e7e30626d67842be
+      # Fix TASK-4c8b03a249cc: Removed invalid 'Region' property (was inside ReplicationConfiguration)
+      # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/e25a7ecb6e0362f498dbd024cd8ba8b3
 
   AppRole:
     Type: AWS::IAM::Role
@@ -71,15 +52,17 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: '*'                       # Issue 2: wildcard action
-                Resource: '*'                     # Issue 3: wildcard resource
+                Action: '*'                       # Issue 2: wildcard action (separate finding)
+                Resource: '*'                     # Issue 3: wildcard resource (separate finding)
 
   OpenSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: open-security-group
+      GroupDescription: restricted-security-group
       SecurityGroupIngress:
+        # Fix TASK-3e0f981cea60: Restrict SSH CIDR from 0.0.0.0/0 to internal network
+        # ARN: arn:aws:inspector2:us-west-2:381492157536:finding/3886fff57097e7bb53d93f789ae6b659
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0                     # Issue 4: SSH open to the world
+          CidrIp: 10.0.0.0/8
