@@ -1,6 +1,18 @@
 # NOTE: contains patterns commonly flagged by scanners (for testing).
 FROM python:3.9-slim
 
+# SECURITY-FIX: CVE-2026-43304 (linux-image-aws) — use-after-free in ncm_disable()
+# The f_ncm ncm_disable() function races with ncm_close() when USB cable is unplugged
+# while a network interface is active. ncm_disable() frees TX/RX requests while
+# ncm_close() may still be accessing them, leading to a use-after-free condition.
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+# See: https://nvd.nist.gov/vuln/detail/CVE-2026-43304
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends apt-utils \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # storing credentials in ENV (Issue 1)
 ENV AWS_ACCESS_KEY_ID=EXAMPLEKEY123
 ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
