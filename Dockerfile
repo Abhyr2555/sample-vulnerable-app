@@ -8,6 +8,14 @@ ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
 WORKDIR /app
 COPY . /app
 
+# SECURITY-FIX: CVE-2026-23532 (freerdp2, libfreerdp2-2) — heap buffer overflow in FreeRDP RDP protocol handling.
+# FreeRDP prior to version 3.21.0 has a client-side heap buffer overflow in handling certain RDP
+# protocol messages that could allow remote code execution.
+# Remediation: Update freerdp2 and libfreerdp2-2 to version 3.21.0 or later.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2026-23532
+# AWS Inspector Finding: arn:aws:inspector2:us-west-2:381492157536:finding/2920f9ea21ed00b30465915d98a266f8
+RUN apt-get update && apt-get install -y --only-upgrade freerdp2 libfreerdp2-2 && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
