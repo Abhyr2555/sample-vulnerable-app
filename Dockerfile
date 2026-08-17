@@ -8,6 +8,13 @@ ENV AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123
 WORKDIR /app
 COPY . /app
 
+# SECURITY-FIX: CVE-2026-23262 (linux-image-aws) — null-ptr-deref in lpfc_prep_embed_io().
+# The LPFC SCSI driver has a null pointer dereference during I/O preparation.
+# Ensure all OS packages including linux-image-aws are updated to their latest patched versions.
+# See: https://nvd.nist.gov/vuln/detail/CVE-2026-23262
+# Remediation: Update linux-image-aws to fixed version (AWS Inspector finding).
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # installs without a lockfile and no --no-cache-dir used (Issue 2)
 RUN pip install -r requirements.txt
 
