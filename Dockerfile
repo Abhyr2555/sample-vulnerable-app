@@ -1,4 +1,5 @@
 # NOTE: contains patterns commonly flagged by scanners (for testing).
+# SECURITY-TODO: CVE-2025-38561 — linux-image-aws: ksmbd: fix Preauh_HashValue race condition. Update linux-image-aws package to fixed version on the host EC2 instance via `apt-get update && apt-get install --only-upgrade linux-image-aws`. Container-level fix not possible for kernel packages; host OS patching is required.
 FROM python:3.9-slim
 
 # storing credentials in ENV (Issue 1)
